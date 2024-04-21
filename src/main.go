@@ -1,141 +1,118 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"encoding/xml"
+	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	send "github.com/jatm80/sms-gateway/http"
+	"github.com/jatm80/sms-gateway/huawei"
 )
 
-func main() {
+type Telegram struct {
+	ChatID int64  `json:"chat_id"`
+	Text   string `json:"text"`
+}
 
-	var login Login
-	var messages Messages
+func main () {
 
-	BASE_URL := os.Getenv("BASE_URL")
-	if len(BASE_URL) == 0 {
-		BASE_URL = "http://192.168.8.1/api"
+	var BIND_ADDRESS_PORT = ":3000"
+    if value, ok := os.LookupEnv("BIND_ADDRESS_PORT"); ok  {
+		BIND_ADDRESS_PORT = value
+	}
+
+	r := mux.NewRouter()
+	r.StrictSlash(false)
+    r.HandleFunc("/send-sms",handleOutbound).Methods(http.MethodPost)
+
+    go func(){
+		h := &huawei.E3372{
+			BaseURL: huawei.DEFAULT_BASE_URL,
 		}
+		m, err := h.GetSMSList()
+		if err != nil {
+			log.Println(err)
+		}
+		if m.Count > 0 {
+			for k,message := range m.Messages {
+				if message.Smstat == 0 {
+					err := sendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Date, message.Content))
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					_, err = h.MarkAsRead(message)
+					if err != nil {
+						log.Println(err)
+						return
+					}	
+				} else {
+					_, err := h.DeleteSMS(message)
+					if err != nil {
+						log.Println(err)
+						return
+					}	
+				}
+
+			}
+		}
+	}()
+
+	http.ListenAndServe(BIND_ADDRESS_PORT,r)
+
+}
+
+
+func handleOutbound(w http.ResponseWriter, r *http.Request) {
+	h := &huawei.E3372{
+		BaseURL: huawei.DEFAULT_BASE_URL,
+	}
+    h.SendSMS("123","test")
+}
+
+func sendToTelegram(message string) error {
 
 	TELEGRAM_TOKEN := os.Getenv("TELEGRAM_TOKEN")
 	if len(TELEGRAM_TOKEN) == 0 {
-		fmt.Printf("Error TELEGRAM_TOKEN not defined")
-		return
+		return errors.New("error TELEGRAM_TOKEN not defined")
 		}
 
 	TELEGRAM_CHAT_ID := os.Getenv("TELEGRAM_CHAT_ID")
 	if len(TELEGRAM_CHAT_ID) == 0 {
-		fmt.Printf("Error TELEGRAM_CHAT_ID not defined")
-		return
+		return errors.New("error TELEGRAM_CHAT_ID not defined")
 		}
 	
 	telegramUrl := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage",TELEGRAM_TOKEN)	
     telegramChatId, err := strconv.ParseInt(TELEGRAM_CHAT_ID, 10, 64)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return
+		return err
 	}
 
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", BASE_URL + "/webserver/SesTokInfo", nil)
-	if err != nil {
-		fmt.Printf("Error creating HTTP request: %v\n", err)
-		return
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Printf("Error making HTTP request: %v\n", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Error reading response body: %v\n", err)
-		return
-	}
-
-	err = xml.Unmarshal(responseBody, &login)
-	if err != nil {
-		fmt.Printf("Error parsing request: %v\n", err)
-		return
-	}
-
-	if len(login.SesInfo) > 0 {
-	fmt.Println(login.SesInfo)
-	fmt.Println(login.TokInfo)
-	} else {
-		fmt.Printf("Error obtaining session values\n")
-		return
-	}
-
-	requestBody := `<?xml version='1.0' encoding='UTF-8'?><request><PageIndex>1</PageIndex><ReadCount>20</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>0</UnreadPreferred></request>`
-
-
-	req, err = http.NewRequest("POST", BASE_URL + "/sms/sms-list", bytes.NewBuffer([]byte(requestBody)))
-	if err != nil {
-		fmt.Printf("Error creating HTTP request: %v\n", err)
-		return
-	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	req.Header.Set("Cookie", login.SesInfo)
-	req.Header.Set("__RequestVerificationToken", login.TokInfo)
-
-	resp, err = client.Do(req)
-	if err != nil {
-		fmt.Printf("Error making HTTP request: %v\n", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	responseBody, err = io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Error reading response body: %v\n", err)
-		return
-	}
-
-	//fmt.Printf("Response Body:\n%s\n", string(responseBody))
-
-
-	err = xml.Unmarshal(responseBody, &messages)
-	if err != nil {
-		fmt.Printf("Error parsing request: %v\n", err)
-		return
-	}
-
-	fmt.Printf("Messages available: %d \n", messages.Count)
-	for key, message := range messages.Messages {
-		fmt.Printf("[%d] %s => %s \n", key, message.Date, message.Content)
-		SendMessage(telegramUrl,&Telegram{ChatID: telegramChatId, Text: fmt.Sprintf("[%d] %s => %s \n", key, message.Date, message.Content)})
-	}
-
-
-}
-
-func SendMessage(url string, message *Telegram) error {
-	payload, err := json.Marshal(message)
+	payload, err := json.Marshal(&Telegram{
+		ChatID: telegramChatId,
+		Text: message,
+		
+	})
 	if err != nil {
 		return err
 	}
-	response, err := http.Post(url, "application/json", bytes.NewBuffer(payload))
+
+	c := &send.Request{
+		Path: telegramUrl,
+		Method: "POST",
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+        Body: payload,
+	}
+	_, err = c.Send()
 	if err != nil {
 		return err
-	}
-	defer func(body io.ReadCloser) {
-		if err := body.Close(); err != nil {
-			log.Println("failed to close response body")
-		}
-	}(response.Body)
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to send successful request. Status was %q", response.Status)
 	}
 	return nil
 }
