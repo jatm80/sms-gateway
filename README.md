@@ -136,4 +136,6 @@ ERROR_CRADLE_UPDATE_PROFILE_FAILED	118006
 ## References:
 https://www.0xf8.org/2017/01/flashing-a-huawei-e3372h-4g-lte-stick-from-hilink-to-stick-mode/
 https://stephenmonro.wordpress.com/2019/02/13/getting-sms-messages-from-the-huawei-e3372-lte-modem/
+https://medium.com/swlh/build-a-telegram-bot-in-go-in-9-minutes-e06ad38acef1
 https://core.telegram.org/bots/webhooks
+https://core.telegram.org/bots/webhooks#how-do-i-set-a-webhook-for-either-type
