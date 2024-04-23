@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"net/http"
 
@@ -88,4 +90,21 @@ func ParseTelegramRequest(r *http.Request) (*Update, error) {
 	 }
 
 	return &update, nil
+}
+
+func ExtractData(m string) (string, string, string, error) {
+ 
+	s := strings.SplitN(m," ",3)
+
+	if len(s) < 3 {
+		return "", "", "", fmt.Errorf("invalid data, received: %s",m)
+	}
+
+    return s[0],s[1],s[2],nil
+}
+
+func IsValidAustralianMobile(phoneNumber string) bool {
+    regex := `^(?:\+?61)?(?:04|\(04\))[0-9]{8}$`
+    pattern := regexp.MustCompile(regex)
+    return pattern.MatchString(phoneNumber)
 }

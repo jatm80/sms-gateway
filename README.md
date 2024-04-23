@@ -1,5 +1,10 @@
 # sms-gateway
 
+## Generate self signed certificate
+```
+openssl req -newkey rsa:4096 -sha256 -nodes -keyout PRIVATE.key -x509 -days 365 -out PUBLIC.pem
+```
+
 ## Error Codes:
 ```
 ERROR_UNKNOWN	100001
