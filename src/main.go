@@ -56,7 +56,7 @@ func main () {
 					if message.Smstat == 0 {
 						log.Println(message)
 						if t.IsTelegramEnabled() {
-							err := t.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Date, message.Content))
+							err := t.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Phone, message.Content))
 							if err != nil {
 								log.Println(err)
 								return
