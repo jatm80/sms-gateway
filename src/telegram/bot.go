@@ -34,20 +34,18 @@ type OutboundMsg struct {
 	Text   string `json:"text"`
 }
 
+var telegramToken = os.Getenv("TELEGRAM_TOKEN")
+var telegramChatId = os.Getenv("TELEGRAM_CHAT_ID")
+
+
 func SendToTelegram(message string) error {
 
-	TELEGRAM_TOKEN := os.Getenv("TELEGRAM_TOKEN")
-	if len(TELEGRAM_TOKEN) == 0 {
-		return errors.New("error TELEGRAM_TOKEN not defined")
-		}
-
-	TELEGRAM_CHAT_ID := os.Getenv("TELEGRAM_CHAT_ID")
-	if len(TELEGRAM_CHAT_ID) == 0 {
-		return errors.New("error TELEGRAM_CHAT_ID not defined")
-		}
+	if ! IsTelegramEnabled() {
+		return errors.New("error TELEGRAM_TOKEN or TELEGRAM_CHAT_ID not defined")
+	}
 	
-	telegramUrl := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage",TELEGRAM_TOKEN)	
-    telegramChatId, err := strconv.ParseInt(TELEGRAM_CHAT_ID, 10, 64)
+	telegramUrl := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage",telegramToken)	
+    telegramChatId, err := strconv.ParseInt(telegramChatId, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -107,4 +105,21 @@ func IsValidAustralianMobile(phoneNumber string) bool {
     regex := `^(?:\+?61)?(?:04|\(04\))[0-9]{8}$`
     pattern := regexp.MustCompile(regex)
     return pattern.MatchString(phoneNumber)
+}
+
+func IsTelegramEnabled() bool {
+	
+	if len(telegramToken) == 0 {
+		return false
+		}
+	
+	if len(telegramChatId) == 0 {
+		return false
+		}
+
+	return true
+}
+
+func GetTelegramToken () string {
+	return telegramToken
 }

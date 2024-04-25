@@ -23,8 +23,8 @@ func main () {
 
 	r := mux.NewRouter()
 	r.StrictSlash(false)
-    if token, ok := os.LookupEnv("TELEGRAM_TOKEN"); ok  {
-		r.HandleFunc("/" + token,TelegramHandler).Methods(http.MethodPost)
+    if telegram.IsTelegramEnabled()  {
+		r.HandleFunc("/" + telegram.GetTelegramToken(),TelegramHandler).Methods(http.MethodPost)
 	}
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -33,7 +33,7 @@ func main () {
 
     go func(){
 		h := &huawei.E3372{
-			BaseURL: huawei.DEFAULT_BASE_URL,
+			BaseURL: huawei.GetAPIBaseUrl(),
 		}
 
         for {
@@ -47,15 +47,19 @@ func main () {
 			if m.Count > 0 {
 				for k,message := range m.Messages {
 					if message.Smstat == 0 {
-						err := telegram.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Date, message.Content))
-						if err != nil {
-							log.Println(err)
-							return
-						}
-						_, err = h.MarkAsRead(message)
-						if err != nil {
-							log.Println(err)
-							return
+						log.Println(message)
+						if telegram.IsTelegramEnabled() {
+							err := telegram.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Date, message.Content))
+							if err != nil {
+								log.Println(err)
+								return
+							} else {
+								_, err = h.MarkAsRead(message)
+								if err != nil {
+									log.Println(err)
+									return
+								}
+							}
 						}	
 					} else {
 						_, err := h.DeleteSMS(message)
@@ -78,7 +82,7 @@ func main () {
 
 func TelegramHandler(w http.ResponseWriter, r *http.Request) {
 	h := &huawei.E3372{
-		BaseURL: huawei.DEFAULT_BASE_URL,
+		BaseURL: huawei.GetAPIBaseUrl(),
 	}
 
 	message, err := telegram.ParseTelegramRequest(r)
@@ -98,12 +102,20 @@ func TelegramHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		 }
 	
-		 fmt.Println(num,text)
+		 fmt.Printf("Received /sms - sending message %s to %s \n",text, num)
 	
 		err = h.SendSMS(num,text)
 		if err != nil {
 			log.Println(err.Error())
 			return
+		 } else {
+			if telegram.IsTelegramEnabled() {
+				err := telegram.SendToTelegram("SMS Sent")
+				if err != nil {
+					log.Println(err)
+					return
+				} 
+			}
 		 }
 	 }
 

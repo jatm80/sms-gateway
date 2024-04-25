@@ -3,6 +3,7 @@ package huawei
 import (
 	"encoding/xml"
 	"fmt"
+	"os"
 
 	"github.com/jatm80/sms-gateway/http"
 )
@@ -45,8 +46,6 @@ type ErrorResponse struct {
     Code    int      `xml:"code"`
     Message string   `xml:"message"`
 }
-
-const DEFAULT_BASE_URL = "http://192.168.8.1/api"
 
 func (e *E3372) Login() (Session, error) {
 
@@ -176,7 +175,7 @@ func (e *E3372) SendSMS(number string, message string) error {
 
 	c := &http.Request{
       Path: e.BaseURL + "/sms/send-sms",
-	  Method: "GET",
+	  Method: "POST",
 	  Headers: map[string]string{
 		"Cookie": s.SesInfo,
 		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -185,10 +184,15 @@ func (e *E3372) SendSMS(number string, message string) error {
 	  Body: []byte(fmt.Sprintf("<?xml version='1.0' encoding='UTF-8'?><request><Index>-1</Index><Phones><Phone>%s</Phone></Phones><Sca></Sca><Content>%s</Content><Length>-1</Length><Reserved>1</Reserved><Date>-1</Date></request>",number,message)),
     }
 
-	_,err = c.Send()
+	resp,err := c.Send()
 	if err != nil {
 		return err
 	}
+
+	_, err = parseXMLResponse(resp)
+    if err != nil {
+        return err
+    } 
 
 	return nil
 }
@@ -212,4 +216,12 @@ func parseXMLResponse(xmlData []byte) (bool, error) {
     }
 
     return false, fmt.Errorf("unexpected XML response format")
+}
+
+func GetAPIBaseUrl() string {
+	var baseUrl = "http://192.168.8.1/api"
+	if b, ok := os.LookupEnv("DEFAULT_BASE_URL"); ok  {
+		baseUrl = b
+	}
+	return baseUrl
 }
