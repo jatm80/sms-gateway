@@ -8,6 +8,14 @@ import (
 	"github.com/jatm80/sms-gateway/http"
 )
 
+type Huawei interface {
+	Login()
+	GetSMSList()
+	MarkAsRead()
+	DeleteSMS()
+	SendSMS()
+}
+
 type E3372 struct {
     BaseURL string
 }

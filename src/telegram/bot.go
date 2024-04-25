@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,6 +13,11 @@ import (
 
 	send "github.com/jatm80/sms-gateway/http"
 )
+
+type Bot struct {
+	Token string
+	ChatId string
+}
 
 type Update struct {
 	UpdateId int     `json:"update_id"`
@@ -34,18 +38,41 @@ type OutboundMsg struct {
 	Text   string `json:"text"`
 }
 
-var telegramToken = os.Getenv("TELEGRAM_TOKEN")
-var telegramChatId = os.Getenv("TELEGRAM_CHAT_ID")
+func (b *Bot) GetTelegramToken () string {
+	return b.Token
+}
 
+func (b *Bot) GetTelegramChatId () string {
+	return b.ChatId
+}
 
-func SendToTelegram(message string) error {
+func (b *Bot) IsTelegramEnabled() bool {
+	
+	if len(b.Token) == 0 {
+		return false
+		}
+	
+	if len(b.ChatId) == 0 {
+		return false
+		}
 
-	if ! IsTelegramEnabled() {
-		return errors.New("error TELEGRAM_TOKEN or TELEGRAM_CHAT_ID not defined")
+	t := regexp.MustCompile(`^\d+:(.*)$`)
+	c := regexp.MustCompile(`^[0-9]+$`)
+	if t.MatchString(b.Token) &&  c.MatchString(b.ChatId) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (b *Bot) SendToTelegram(message string) error {
+
+	if ! b.IsTelegramEnabled() {
+		return errors.New("error TELEGRAM_TOKEN or TELEGRAM_CHAT_ID not defined or valid")
 	}
 	
-	telegramUrl := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage",telegramToken)	
-    telegramChatId, err := strconv.ParseInt(telegramChatId, 10, 64)
+	telegramUrl := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage",b.Token)	
+    telegramChatId, err := strconv.ParseInt(b.ChatId, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -105,21 +132,4 @@ func IsValidAustralianMobile(phoneNumber string) bool {
     regex := `^(?:\+?61)?(?:04|\(04\))[0-9]{8}$`
     pattern := regexp.MustCompile(regex)
     return pattern.MatchString(phoneNumber)
-}
-
-func IsTelegramEnabled() bool {
-	
-	if len(telegramToken) == 0 {
-		return false
-		}
-	
-	if len(telegramChatId) == 0 {
-		return false
-		}
-
-	return true
-}
-
-func GetTelegramToken () string {
-	return telegramToken
 }

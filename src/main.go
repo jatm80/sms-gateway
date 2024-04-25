@@ -12,6 +12,8 @@ import (
 	"github.com/jatm80/sms-gateway/telegram"
 )
 
+var telegramToken = os.Getenv("TELEGRAM_TOKEN")
+var telegramChatId = os.Getenv("TELEGRAM_CHAT_ID")
 
 
 func main () {
@@ -21,10 +23,15 @@ func main () {
 		BIND_ADDRESS_PORT = value
 	}
 
+	t := &telegram.Bot{
+		Token: telegramToken,
+		ChatId: telegramChatId,
+	}
+
 	r := mux.NewRouter()
 	r.StrictSlash(false)
-    if telegram.IsTelegramEnabled()  {
-		r.HandleFunc("/" + telegram.GetTelegramToken(),TelegramHandler).Methods(http.MethodPost)
+    if t.IsTelegramEnabled()  {
+		r.HandleFunc("/" + t.GetTelegramToken(),TelegramHandler).Methods(http.MethodPost)
 	}
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -48,8 +55,8 @@ func main () {
 				for k,message := range m.Messages {
 					if message.Smstat == 0 {
 						log.Println(message)
-						if telegram.IsTelegramEnabled() {
-							err := telegram.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Date, message.Content))
+						if t.IsTelegramEnabled() {
+							err := t.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Date, message.Content))
 							if err != nil {
 								log.Println(err)
 								return
@@ -85,6 +92,11 @@ func TelegramHandler(w http.ResponseWriter, r *http.Request) {
 		BaseURL: huawei.GetAPIBaseUrl(),
 	}
 
+	t := &telegram.Bot{
+		Token: telegramToken,
+		ChatId: telegramChatId,
+	}
+
 	message, err := telegram.ParseTelegramRequest(r)
     if err != nil {
 		return 
@@ -102,15 +114,15 @@ func TelegramHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		 }
 	
-		 fmt.Printf("Received /sms - sending message %s to %s \n",text, num)
+		log.Printf("Received /sms - sending message %s to %s \n",text, num)
 	
 		err = h.SendSMS(num,text)
 		if err != nil {
 			log.Println(err.Error())
 			return
 		 } else {
-			if telegram.IsTelegramEnabled() {
-				err := telegram.SendToTelegram("SMS Sent")
+			if t.IsTelegramEnabled() {
+				err := t.SendToTelegram("SMS Sent")
 				if err != nil {
 					log.Println(err)
 					return

@@ -7,7 +7,7 @@ import (
 )
 
 type Http interface{
-	Request
+	Send()
 }
 
 type Request struct {
