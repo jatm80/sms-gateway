@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/forPelevin/gomoji"
 	"github.com/gorilla/mux"
 	"github.com/jatm80/sms-gateway/huawei"
 	"github.com/jatm80/sms-gateway/telegram"
@@ -56,7 +57,7 @@ func main () {
 					if message.Smstat == 0 {
 						log.Println(message)
 						if t.IsTelegramEnabled() {
-							err := t.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Phone, message.Content))
+							err := t.SendToTelegram(fmt.Sprintf("[%d] %s => %s \n", k, message.Phone, gomoji.RemoveEmojis(message.Content)))
 							if err != nil {
 								log.Println(err)
 								return
@@ -113,10 +114,12 @@ func TelegramHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("not valid AU mobile number")
 			return
 		 }
+
+		ne := gomoji.RemoveEmojis(text)
 	
-		log.Printf("Received /sms - sending message %s to %s \n",text, num)
+		log.Printf("Received /sms - sending message %s to %s \n",ne, num)
 	
-		err = h.SendSMS(num,text)
+		err = h.SendSMS(num,ne)
 		if err != nil {
 			log.Println(err.Error())
 			return
