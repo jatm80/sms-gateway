@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,8 +17,13 @@ import (
 var telegramToken = os.Getenv("TELEGRAM_TOKEN")
 var telegramChatId = os.Getenv("TELEGRAM_CHAT_ID")
 
-
 func main () {
+	CERT_BASE64 := os.Getenv("CERT_BASE64")
+   	KEY_BASE64 := os.Getenv("KEY_BASE64")
+
+	if CERT_BASE64 == "" || KEY_BASE64 == "" {
+        log.Fatal("CERT_BASE64 and KEY_BASE64 environment variables must be set")
+    }
 
 	var BIND_ADDRESS_PORT = ":8443"
     if value, ok := os.LookupEnv("BIND_ADDRESS_PORT"); ok  {
@@ -83,7 +89,17 @@ func main () {
 		}
 	}()
 
-	http.ListenAndServeTLS(BIND_ADDRESS_PORT,"PUBLIC.pem","PRIVATE.key",r)
+	cert, err := base64.StdEncoding.DecodeString(CERT_BASE64)
+    if err != nil {
+        log.Fatalf("Failed to decode certificate: %v", err)
+    }
+
+    key, err := base64.StdEncoding.DecodeString(KEY_BASE64)
+    if err != nil {
+        log.Fatalf("Failed to decode key: %v", err)
+    }
+
+	http.ListenAndServeTLS(BIND_ADDRESS_PORT,string(cert),string(key),r)
 
 }
 
