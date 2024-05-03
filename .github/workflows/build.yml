@@ -34,6 +34,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     env:
       PROJECT: raspi_sms_gateway
@@ -46,12 +47,12 @@ jobs:
       - name: Build for Raspberry 2 
         run: |
           GOARM=6
-          go build -C src -o ../bin/$PROJECT_$GOOS_$GOARCH_$GOARM
+          go build -C src -o ../${{github.path}}/$PROJECT_$GOOS_$GOARCH_$GOARM
 
       - name: Build for Raspberry 3
         run: |
           GOARM=7
-          go build -C src -o ../bin/$PROJECT_$GOOS_$GOARCH_$GOARM
+          go build -C src -o ../${{github.path}}/$PROJECT_$GOOS_$GOARCH_$GOARM
 
       - name: Create Release
         id: create_release
@@ -74,7 +75,7 @@ jobs:
 
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin
+          asset_path: ${{github.path}}
           asset_name: $PROJECT_$GOOS_$GOARCH_$GOARM
           asset_content_type: application/octet-stream
 
@@ -87,6 +88,6 @@ jobs:
 
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin
+          asset_path: ${{github.path}}
           asset_name: $PROJECT_$GOOS_$GOARCH_$GOARM
           asset_content_type: application/octet-stream
