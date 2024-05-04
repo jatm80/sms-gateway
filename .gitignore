@@ -1,6 +1,4 @@
 bin/*
 .vscode/
-NOTES.md
-main_old_go
 PRIVATE.key
 PUBLIC.pem
