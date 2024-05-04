@@ -19,7 +19,7 @@ jobs:
       - uses: golangci/golangci-lint-action@v5
         with:
           working-directory: src
-          args: --timeout=5m --config .golangci.yaml ./...
+          args: --timeout=5m ./...
 
   build:
     name: Build and Run
