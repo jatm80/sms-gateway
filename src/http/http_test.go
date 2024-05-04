@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func TestSend_Success(t *testing.T) {
 
 	r := &Request{
@@ -21,7 +20,7 @@ func TestSend_Success(t *testing.T) {
 	}
 
 	expectedResponseBody := "Example Domain"
-	if ! strings.Contains(string(responseBody), expectedResponseBody) {
+	if !strings.Contains(string(responseBody), expectedResponseBody) {
 		t.Errorf("Unexpected response body. Expected: %s, Got: %s", expectedResponseBody, responseBody)
 	}
 }

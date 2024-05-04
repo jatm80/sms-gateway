@@ -6,28 +6,28 @@ import (
 	"net/http"
 )
 
-type Http interface{
+type HTTP interface {
 	Send()
 }
 
 type Request struct {
-	Path string
-	Method string
+	Path    string
+	Method  string
 	Headers map[string]string
-	Body []byte
+	Body    []byte
 }
 
-func (r *Request) Send () ([]byte, error) {
+func (r *Request) Send() ([]byte, error) {
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest(r.Method,r.Path, bytes.NewBuffer(r.Body))
+	req, err := http.NewRequest(r.Method, r.Path, bytes.NewBuffer(r.Body))
 	if err != nil {
 		return nil, err
 	}
 
-	for k,v := range r.Headers {
-		req.Header.Set(k,v)
+	for k, v := range r.Headers {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := client.Do(req)

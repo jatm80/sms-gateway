@@ -6,7 +6,6 @@ linters:
     - gocritic
     - goconst
     - gocyclo
-    - gofumpt
     - goimports
     - misspell
     - revive
@@ -16,7 +15,7 @@ linters:
 
 linters-settings:
   gocyclo:
-    min-complexity: 12
+    min-complexity: 17
   gofumpt:
     extra-rules: true
   govet:

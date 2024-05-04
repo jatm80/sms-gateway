@@ -14,18 +14,9 @@ func (m *MockReadCloser) Close() error {
 	return nil
 }
 
-type mockRequest struct {
-	body []byte
-}
-
-func (m *mockRequest) Read(p []byte) (n int, err error) {
-	copy(p, m.body)
-	return len(m.body), nil
-}
-
 func TestIsTelegramEnabled(t *testing.T) {
-	botWithToken := &Bot{Token: "1234567890:abcdef", ChatId: "123456789"}
-	botWithoutToken := &Bot{Token: "", ChatId: "123456789"}
+	botWithToken := &Bot{Token: "1234567890:abcdef", ChatID: "123456789"}
+	botWithoutToken := &Bot{Token: "", ChatID: "123456789"}
 
 	if !botWithToken.IsTelegramEnabled() {
 		t.Errorf("Expected botWithToken to be enabled, got disabled")
@@ -37,7 +28,7 @@ func TestIsTelegramEnabled(t *testing.T) {
 }
 
 func TestSendToTelegram(t *testing.T) {
-	bot := &Bot{Token: "1234567890:abcdef", ChatId: "123456789"}
+	bot := &Bot{Token: "1234567890:abcdef", ChatID: "123456789"}
 
 	err := bot.SendToTelegram("Hello, Telegram!")
 	if err != nil {
@@ -58,16 +49,16 @@ func TestParseTelegramRequest(t *testing.T) {
 		t.Errorf("ParseTelegramRequest returned error: %v", err)
 	}
 
-	if update.UpdateId != 123 {
-		t.Errorf("Expected UpdateId to be 123, got %d", update.UpdateId)
+	if update.UpdateID != 123 {
+		t.Errorf("Expected UpdateId to be 123, got %d", update.UpdateID)
 	}
 
 	if update.Message.Text != "Hello" {
 		t.Errorf("Expected Message.Text to be 'Hello', got %s", update.Message.Text)
 	}
 
-	if update.Message.Chat.Id != 456 {
-		t.Errorf("Expected Chat.Id to be 456, got %d", update.Message.Chat.Id)
+	if update.Message.Chat.ID != 456 {
+		t.Errorf("Expected Chat.Id to be 456, got %d", update.Message.Chat.ID)
 	}
 }
 
