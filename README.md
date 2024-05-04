@@ -1,4 +1,6 @@
 # sms-gateway
+[![CI](https://github.com/jatm80/sms-gateway/actions/workflows/ci.yaml/badge.svg)](https://github.com/jatm80/sms-gateway/actions/workflows/ci.yaml)
+
 
 ## Generate self signed certificate
 ```
