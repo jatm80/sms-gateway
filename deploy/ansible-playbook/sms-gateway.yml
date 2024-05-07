@@ -1,0 +1,12 @@
+---
+- name: apply common configuration to all nodes
+  hosts: all
+  remote_user: jatm
+  roles:
+    - common
+
+- name: configure and deploy the sms-gateway application
+  hosts: raspi
+  remote_user: jatm
+  roles:
+    - raspi

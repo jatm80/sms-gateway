@@ -1,0 +1,23 @@
+---
+# tasks file for pi2
+- name: search latest release for raspi2
+  uri:                                                               
+    url: https://api.github.com/repos/jatm80/sms-gateway/releases/latest
+    return_content: true                                             
+  register: release_info      
+
+- name: Output JSON response
+  debug:
+    var: release_info.json                                       
+
+- name: Extract browser_download_url for the asset you want to download
+  set_fact:
+    asset_url: "{{ item.browser_download_url }}"
+  loop: "{{ release_info.json.assets }}"
+  when: item.name == "sms-gateway_1.0.0_linux_armv6"
+
+- name: Download the asset
+  uri:
+    url: "{{ asset_url }}"
+    method: GET
+    dest: "{{ ansible_env.HOME }}" 
