@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,13 +17,8 @@ import (
 var telegramToken = os.Getenv("TELEGRAM_TOKEN")
 var telegramChatID = os.Getenv("TELEGRAM_CHAT_ID")
 
-func main() {
-	certBase64 := os.Getenv("CERT_BASE64")
-	keyBase64 := os.Getenv("KEY_BASE64")
 
-	if certBase64 == "" || keyBase64 == "" {
-		log.Fatal("CERT_BASE64 and KEY_BASE64 environment variables must be set")
-	}
+func main() {
 
 	var bindAddressPort = ":8443"
 	if value, ok := os.LookupEnv("BIND_ADDRESS_PORT"); ok {
@@ -88,17 +83,12 @@ func main() {
 		}
 	}()
 
-	cert, err := base64.StdEncoding.DecodeString(certBase64)
+	c,k, err := getCertificates()
 	if err != nil {
-		log.Fatalf("Failed to decode certificate: %v", err)
+		log.Fatalln(err)
 	}
 
-	key, err := base64.StdEncoding.DecodeString(keyBase64)
-	if err != nil {
-		log.Fatalf("Failed to decode key: %v", err)
-	}
-
-	err = http.ListenAndServeTLS(bindAddressPort, string(cert), string(key), r)
+	err = http.ListenAndServeTLS(bindAddressPort, c, k, r)
 	if err != nil {
 		log.Fatalf("Something went wrong starting web service: %v", err)
 	}
@@ -149,4 +139,28 @@ func TelegramHandler(_ http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func getCertificates() (string, string, error) {
+
+	var certFilePath = "PUBLIC.pem" // os.Getenv("CERT_PATH")
+	var keyFilePath = "PRIVATE.key" //os.Getenv("KEY_PATH")
+
+	if _, err := os.Stat(certFilePath); err != nil {
+		if cert := os.Getenv("CERT_PATH"); cert != "" {
+			certFilePath = cert
+		} else {
+			return "","",errors.New("CERT_PATH environment variables must be set or PUBLIC.pem must exist")
+		}
+	}
+
+	if _, err := os.Stat(keyFilePath); err != nil {
+		if key := os.Getenv("KEY_PATH"); key != "" {
+			keyFilePath = key
+		} else {
+			return "","",errors.New("KEY_PATH environment variables must be set or PRIVATE.key must exist")
+		}
+	}
+
+	return certFilePath,keyFilePath,nil
 }
