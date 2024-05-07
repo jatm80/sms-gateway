@@ -17,7 +17,6 @@ import (
 var telegramToken = os.Getenv("TELEGRAM_TOKEN")
 var telegramChatID = os.Getenv("TELEGRAM_CHAT_ID")
 
-
 func main() {
 
 	var bindAddressPort = ":8443"
@@ -83,7 +82,7 @@ func main() {
 		}
 	}()
 
-	c,k, err := getCertificates()
+	c, k, err := getCertificates()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -143,14 +142,14 @@ func TelegramHandler(_ http.ResponseWriter, r *http.Request) {
 
 func getCertificates() (string, string, error) {
 
-	var certFilePath = "PUBLIC.pem" // os.Getenv("CERT_PATH")
-	var keyFilePath = "PRIVATE.key" //os.Getenv("KEY_PATH")
+	var certFilePath = "PUBLIC.pem"
+	var keyFilePath = "PRIVATE.key"
 
 	if _, err := os.Stat(certFilePath); err != nil {
 		if cert := os.Getenv("CERT_PATH"); cert != "" {
 			certFilePath = cert
 		} else {
-			return "","",errors.New("CERT_PATH environment variables must be set or PUBLIC.pem must exist")
+			return "", "", errors.New("CERT_PATH environment variables must be set or PUBLIC.pem must exist")
 		}
 	}
 
@@ -158,9 +157,9 @@ func getCertificates() (string, string, error) {
 		if key := os.Getenv("KEY_PATH"); key != "" {
 			keyFilePath = key
 		} else {
-			return "","",errors.New("KEY_PATH environment variables must be set or PRIVATE.key must exist")
+			return "", "", errors.New("KEY_PATH environment variables must be set or PRIVATE.key must exist")
 		}
 	}
 
-	return certFilePath,keyFilePath,nil
+	return certFilePath, keyFilePath, nil
 }
