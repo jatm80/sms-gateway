@@ -60,6 +60,33 @@ cd deploy/ansible-playbook/
 ansible-playbook -i inventory.ini sms-gateway.yaml
 ```
 
+* Adjust Iptables in the remote server to limit traffic to Telegram (sample):
+```
+#!/bin/bash
+
+sudo sysctl net.ipv4.ip_forward=1
+
+# Flush existing rules and chains
+sudo iptables -F
+sudo iptables -X
+
+# Set default policies to ACCEPT
+sudo iptables -P INPUT ACCEPT
+sudo iptables -P FORWARD ACCEPT
+sudo iptables -P OUTPUT ACCEPT
+
+# Enable NAT (if needed)
+sudo iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+
+# Allow traffic forwarding between interfaces
+sudo iptables -A FORWARD -i eth0 -o eth1 -j ACCEPT
+
+# Allow Telegram traffic
+sudo iptables -A INPUT -i eth0 -p tcp -m tcp -s 149.154.160.0/20,91.108.4.0/22 --dport 8443 -j ACCEPT
+sudo iptables -A INPUT -i eth0 -p tcp -m tcp -s 192.168.11.0/24 --dport 8443 -j ACCEPT
+sudo iptables -A INPUT -i eth0 -p tcp -m tcp --dport 8443 -j REJECT
+```
+
 ## Configure Telegram Bot with Self signed certificate
 * Modify the file in `scripts/self-signed-cert.html` and defined the following:
 ```
