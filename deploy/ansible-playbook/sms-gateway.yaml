@@ -3,22 +3,22 @@
   hosts: raspberry_pi
   become: yes
   vars:
-    github_release_url: "https://github.com/jatm80/sms-gateway/releases/download/v1.0.1/sms-gateway_1.0.1_linux_armv6"
-    binary_dest: "/usr/local/bin/sms-gateway_1.0.1_linux_armv6"
+    github_release_url: "https://github.com/jatm80/sms-gateway/releases/download/v1.1.0/sms-gateway_1.1.0_linux_armv6"
+    binary_dest: "/usr/local/bin/sms-gateway_1.1.0_linux_armv6"
     service_name: "sms-gateway"
     initd_script: "/etc/init.d/{{ service_name }}"
     private_key: "/opt/PRIVATE.key"
     public_cert: "/opt/PUBLIC.pem"
-    country: ">>> US <<<"
-    state: ">>> New Jersey <<<"
-    locality: ">>> GothamCity <<<"
-    organization: ">>> jondoe <<<"
+    country: "AU"
+    state: "Victoria"
+    locality: "Melbourne"
+    organization: "JATM"
     organizational_unit: "None"
-    common_name: ">>> sms-bot.example.com <<<"
-    email: ">>>> webmaster@example.com <<<"
+    common_name: "{{ lookup('pipe', 'pass JT-01/exports/sms-gateway/CN') }}"
+    email: "{{ lookup('pipe', 'pass JT-01/exports/sms-gateway/EMAIL') }}"
     env_vars:
-      TELEGRAM_TOKEN: ">>> your telegram bot token <<<"
-      TELEGRAM_CHAT_ID: ">>> your telegram bot chat id <<<"
+      TELEGRAM_TOKEN: "{{ lookup('pipe', 'pass JT-01/exports/sms-gateway/TELEGRAM_TOKEN') }}"
+      TELEGRAM_CHAT_ID: "{{ lookup('pipe', 'pass JT-01/exports/sms-gateway/TELEGRAM_CHAT_ID') }}"
       CERT_PATH: "/opt/PUBLIC.pem"
       KEY_PATH: "/opt/PRIVATE.key"
 
@@ -60,12 +60,12 @@
     - name: Download binary release from GitHub
       get_url:
         url: "{{ github_release_url }}"
-        dest: "/tmp/sms-gateway_1.0.1_linux_armv6"
+        dest: "/tmp/sms-gateway_1.1.0_linux_armv6"
 
     - name: Copy binary to destination
       copy:
         remote_src: true
-        src: "/tmp/sms-gateway_1.0.1_linux_armv6"
+        src: "/tmp/sms-gateway_1.1.0_linux_armv6"
         dest: "{{ binary_dest }}"
 
     - name: Set permissions on binary in destination

@@ -98,7 +98,7 @@ sudo iptables -A INPUT -i eth0 -p tcp -m tcp --dport 8443 -j REJECT
   // port: is the exposed port of the service sms-gateway. Telegram only allows for 443 or 8443.
   // host: is the url to reach to service sms-gateway once deployed.         
 ```  
-
+* Upload the `PUBLIC.pem` key 
 * Click in `Set Webhook`, Telegram will respond with the URL of the webhook
 
 
