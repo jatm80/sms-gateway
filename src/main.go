@@ -11,6 +11,7 @@ import (
 	"github.com/forPelevin/gomoji"
 	"github.com/gorilla/mux"
 	"github.com/jatm80/sms-gateway/huawei"
+	"github.com/jatm80/sms-gateway/metrics"
 	"github.com/jatm80/sms-gateway/telegram"
 )
 
@@ -18,6 +19,8 @@ var telegramToken = os.Getenv("TELEGRAM_TOKEN")
 var telegramChatID = os.Getenv("TELEGRAM_CHAT_ID")
 
 func main() {
+
+	metrics.Load()
 
 	var bindAddressPort = ":8443"
 	if value, ok := os.LookupEnv("BIND_ADDRESS_PORT"); ok {
