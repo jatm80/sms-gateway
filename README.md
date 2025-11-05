@@ -101,6 +101,12 @@ sudo iptables -A INPUT -i eth0 -p tcp -m tcp --dport 8443 -j REJECT
 * Upload the `PUBLIC.pem` key 
 * Click in `Set Webhook`, Telegram will respond with the URL of the webhook
 
+## Contributing
+
+ * Run linter before commit: 
+  ```
+  docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.64.8 golangci-lint run -v --fix
+```
 
 ## References:
 * https://www.0xf8.org/2017/01/flashing-a-huawei-e3372h-4g-lte-stick-from-hilink-to-stick-mode/

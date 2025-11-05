@@ -19,6 +19,9 @@ func Load() {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
-	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
-	log.Fatal(http.ListenAndServe(":9100", nil))
+	go func() {
+		http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+		log.Println("Metrics server on :9100")
+		log.Fatal(http.ListenAndServe(":9100", nil))
+	}()
 }

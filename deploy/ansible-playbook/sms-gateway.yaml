@@ -3,8 +3,8 @@
   hosts: raspberry_pi
   become: yes
   vars:
-    github_release_url: "https://github.com/jatm80/sms-gateway/releases/download/v1.1.0/sms-gateway_1.1.0_linux_armv6"
-    binary_dest: "/usr/local/bin/sms-gateway_1.1.0_linux_armv6"
+    github_release_url: "https://github.com/jatm80/sms-gateway/releases/download/v1.2.1/sms-gateway_1.2.1_linux_armv6"
+    binary_dest: "/usr/local/bin/sms-gateway_1.2.1_linux_armv6"
     service_name: "sms-gateway"
     initd_script: "/etc/init.d/{{ service_name }}"
     private_key: "/opt/PRIVATE.key"
@@ -60,12 +60,12 @@
     - name: Download binary release from GitHub
       get_url:
         url: "{{ github_release_url }}"
-        dest: "/tmp/sms-gateway_1.1.0_linux_armv6"
+        dest: "/tmp/sms-gateway_1.2.1_linux_armv6"
 
     - name: Copy binary to destination
       copy:
         remote_src: true
-        src: "/tmp/sms-gateway_1.1.0_linux_armv6"
+        src: "/tmp/sms-gateway_1.2.1_linux_armv6"
         dest: "{{ binary_dest }}"
 
     - name: Set permissions on binary in destination
